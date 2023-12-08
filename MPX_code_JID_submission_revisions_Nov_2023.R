@@ -9,8 +9,8 @@ library(infer)
 library(gtsummary)
 install.packages("gtsummary")
 # Read in data and convert date columns to date format
-mpx <- read.csv("data/MPX_Dataframe_for_R.csv") %>%
-  mutate_at(vars(any_sign_start:cold_not_mpx_end), as_date, format="%d/%m/%Y")
+mpx <- read.csv("data/MPX_Dataframe_for_R_Nov_2023.csv") %>%
+  mutate_at(vars(any_sign_start:meds_other_end), as_date, format="%d/%m/%Y")
 
 # Make dataframe into a "tidy dataframe":
 mpx <- mpx %>%
@@ -112,7 +112,7 @@ epicurve <- mpx %>%
 print (epicurve)
 
 #Save and print epicurve
-ggsave(filename = "results/epicurve_5-13d_Last_date_subgroup_direct_contact.png",
+ggsave(filename = "results/epicurve_5-13d_Last_date_subgroup_direct_contact_rpt.png",
        plot = epicurve)
 
 ##DESCRIPTIVE STATS
@@ -208,7 +208,7 @@ compare_wide %>%
     by = fatal,
     statistic = list(
       all_categorical() ~ "{n} / {N} ({p}%)"),
-    include = anorexia : ulceration
+    include = analgesia_1 : ulceration
   ) %>% 
   add_p() %>% 
   add_ci
@@ -232,7 +232,7 @@ compare_wide %>%
     by = group,
     statistic = list(
       all_categorical() ~ "{n} / {N} ({p}%)"),
-    include = anorexia : ulceration
+    include = analgesia_1 : ulceration
   ) %>% 
   add_p() %>% 
   add_ci
@@ -478,3 +478,57 @@ resp %>%
   ) %>% 
   add_p() %>% 
   add_ci()
+
+
+#DESCRIPTIVE STATS: ASSOCIATIONS BETWEEN CLINICAL SIGNS
+#look for association between grouped resp signs and death
+resp %>% 
+  tbl_summary(
+    by = fatal,
+    statistic = list(
+      all_categorical() ~ "{n} / {N} ({p}%)"),
+    include = resp_any
+  ) %>% 
+  add_p() %>% 
+  add_ci()
+
+#look for association between dyspnea and other clinical signs
+compare_wide %>% 
+  #filter to include only cases (remove negatives)
+  filter(status != "n") %>% 
+  tbl_summary(
+    by = dyspnea,
+    statistic = list(
+      all_categorical() ~ "{n} / {N} ({p}%)"),
+    include = analgesia_1 : ulceration
+  ) %>% 
+  add_p() %>% 
+  add_ci
+
+#look for association between peri-laryngeal edema and other clinical signs
+compare_wide %>% 
+  #filter to include only cases (remove negatives)
+  filter(status != "n") %>% 
+  tbl_summary(
+    by = edema_laryngeal,
+    statistic = list(
+      all_categorical() ~ "{n} / {N} ({p}%)"),
+    include = analgesia_1 : ulceration
+  ) %>% 
+  add_p() %>% 
+  add_ci
+
+#look for association between steroid use and survival in animals with 
+#peri-laryngeal edema 
+compare_wide %>% 
+  #filter to include only cases (remove negatives)
+  filter(status != "n") %>% 
+  filter(edema_laryngeal == "yes") %>%
+  tbl_summary(
+    by = fatal,
+    statistic = list(
+      all_categorical() ~ "{n} / {N} ({p}%)"),
+    include = analgesia_1 : ulceration
+  ) %>% 
+  add_p() %>% 
+  add_ci
